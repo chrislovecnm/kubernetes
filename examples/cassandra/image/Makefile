@@ -14,7 +14,7 @@
 
 # build the cassandra image.
 
-VERSION=v9
+VERSION=v11
 
 all: build
 
@@ -25,6 +25,10 @@ kubernetes-cassandra.jar: ../java/* ../java/src/main/java/io/k8s/cassandra/*.jav
 
 build: kubernetes-cassandra.jar
 	docker build -t gcr.io/google_samples/cassandra:${VERSION} .
+
+local:
+	docker build -t 10.100.179.231:5000/cassandra:${VERSION} .
+	docker push 10.100.179.231:5000/cassandra:${VERSION}
 
 push: build
 	gcloud docker push gcr.io/google_samples/cassandra:${VERSION}
