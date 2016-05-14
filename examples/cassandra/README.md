@@ -45,7 +45,11 @@ Documentation for other releases can be found at
   - [Step 3: Scale up the Cassandra cluster](#step-3-scale-up-the-cassandra-cluster)
   - [Step 4: Delete the Replication Controller](#step-4-delete-the-replication-controller)
   - [Step 5: Use a DaemonSet instead of a Replication Controller](#step-5-use-a-daemonset-instead-of-a-replication-controller)
-  - [Step 6: Resource Cleanup](#step-6-resource-cleanup)
+  - [Step 6: Delete the DaemonSet](#step-6-delete-the-daemonset)
+  - [Step 7: Use a PetSet to create Cassandra](#step-7-use-a-petset-to-create-cassandra)
+  - [Step 8: Scale up the Cassandra cluster](#step-8-scale-up-the-cassandra-cluster)
+  - [Step 9: Delete PetSet](#step-9-delete-the-petset)
+  - [Step 10: Delete Service](#step-10-delete-service)
   - [Seed Provider Source](#seed-provider-source)
 
 The following document describes the development of a _cloud native_
@@ -62,6 +66,7 @@ This example also uses some of the core components of Kubernetes:
 - [ _Services_](../../docs/user-guide/services.md)
 - [_Replication Controllers_](../../docs/user-guide/replication-controller.md)
 - [_Daemon Sets_](../../docs/admin/daemons.md)
+- [_PetSet_](../../docs/user-guide/petset.md) FIXME correct url
 
 ## Prerequisites
 
@@ -71,16 +76,19 @@ command line tool somewhere in your path.  Please see the
 [getting started guides](../../docs/getting-started-guides/)
 for installation instructions for your platform.
 
-This example also has a few code and configuration files needed.  To avoid
+For the PetSet example you require a >=1.3 cluster.  This feature was released as
+alpha in 1.3.
+
+This example also has a few configuration files needed.  To avoid
 typing these out, you can `git clone` the Kubernetes repository to your local
 computer.
 
 ## Cassandra Docker
 
-The pods use the [```gcr.io/google-samples/cassandra:v9```](image/Dockerfile)
+The pods use the [```gcr.io/google-samples/cassandra:v10```](image/Dockerfile)
 image from Google's [container registry](https://cloud.google.com/container-registry/docs/).
 The docker is based on `debian:jessie` and includes OpenJDK 8. This image
-includes a standard Cassandra installation from the Apache Debian repo.
+includes a standard Cassandra installation from the Apache Debian repository.
 
 ### Custom Seed Provider
 
@@ -131,9 +139,32 @@ kubectl delete rc cassandra
 # then, create a daemonset to place a cassandra node on each kubernetes node
 kubectl create -f examples/cassandra/cassandra-daemonset.yaml --validate=false
 
+# validate the Cassandra cluster. Substitute the name of one of your pods.
+kubectl exec -ti cassandra-xxxxx -- nodetool status
+
+# resource cleanup
+kubectl delete daemonset cassandra
+
+# then, create a petset
+# this feature is only available in k8s >= 1.3
+kubectl create -f examples/cassandra/cassandra-petset.yaml --validate=false
+
+# validate the Cassandra cluster. Since we are using petset we know the name
+# of our pod
+kubectl exec -ti cassandra-00 -- nodetool status
+
+# scale up the Cassandra cluster
+# FIXME is this the correct syntax
+kubectl scale petset cassandra --replicas=4
+
+# validate the new number of pods in cluster.
+kubectl exec -ti cassandra-03 -- nodetool status
+
+# resource cleanup
+kubectl delete petset cassandra
+
 # resource cleanup
 kubectl delete service -l app=cassandra
-kubectl delete daemonset cassandra
 ```
 
 ## Step 1: Create a Cassandra Service
