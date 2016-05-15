@@ -7,17 +7,15 @@ spec:
   replicas: 3
   template:
     metadata:
-      # Why is this here??
-      # annotations:
-        # Flip this to false after each node is stable.
-        # To check the stability of a node, see kubectl logs.
-        # pod.alpha.kubernetes.io/initialized: "false"
+      annotations:
+         pod.alpha.kubernetes.io/initialized: "true"
       labels:
         app: cassandra
     spec:
       containers:
       - name: cassandra
-        image: gcr.io/google-samples/cassandra:v9
+        image: 10.100.97.89:5000/cassandra
+        #image: gcr.io/google-samples/cassandra:v9
         imagePullPolicy: Always
         command:
           - /run.sh
