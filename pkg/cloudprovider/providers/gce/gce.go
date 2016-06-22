@@ -126,7 +126,7 @@ type Disks interface {
 	// representing this PD, namely failure domain and zone.
 	// zone can be provided to specify the zone for the PD,
 	// if empty all managed zones will be searched.
-	GetAutoLabelsForPD(name string) (map[string]string, error)
+	GetAutoLabelsForPD(name string, zone string) (map[string]string, error)
 }
 
 type instRefSlice []*compute.InstanceReference
@@ -2254,10 +2254,13 @@ func (gce *GCECloud) CreateDisk(name string, zone string, sizeGb int64, tags map
 		return err
 	}
 
+	// Hacking in only creating pd-ssd disks.
+	// Would need to figure out who calls this method
 	diskToCreate := &compute.Disk{
 		Name:        name,
 		SizeGb:      sizeGb,
 		Description: tagsStr,
+		Type:        "pd-ssd",
 	}
 
 	createOp, err := gce.service.Disks.Insert(gce.projectID, zone, diskToCreate).Do()
