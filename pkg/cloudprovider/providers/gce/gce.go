@@ -127,6 +127,7 @@ type Disks interface {
 	// zone can be provided to specify the zone for the PD,
 	// if empty all managed zones will be searched.
 	GetAutoLabelsForPD(name string, zone string) (map[string]string, error)
+
 }
 
 type instRefSlice []*compute.InstanceReference
@@ -2256,11 +2257,12 @@ func (gce *GCECloud) CreateDisk(name string, zone string, sizeGb int64, tags map
 
 	// Hacking in only creating pd-ssd disks.
 	// Would need to figure out who calls this method
+        // and pass in pd-ssd
 	diskToCreate := &compute.Disk{
 		Name:        name,
 		SizeGb:      sizeGb,
 		Description: tagsStr,
-		Type:        "pd-ssd",
+		Type:        "https://" + path.Join("www.googleapis.com/compute/v1/projects/", gce.projectID, "zones", zone, "diskTypes", "pd-ssd"),
 	}
 
 	createOp, err := gce.service.Disks.Insert(gce.projectID, zone, diskToCreate).Do()
